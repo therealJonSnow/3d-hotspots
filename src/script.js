@@ -3,10 +3,13 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { gsap } from 'gsap'
+import { Raycaster } from 'three'
 
 /**
  * Loaders
  */
+let sceneReady = false
+
 const loadingBarElement = document.querySelector('.loading-bar')
 const loadingManager = new THREE.LoadingManager(
     // Loaded
@@ -22,6 +25,10 @@ const loadingManager = new THREE.LoadingManager(
             loadingBarElement.classList.add('ended')
             loadingBarElement.style.transform = ''
         }, 500)
+
+        window.setTimeout(() => {
+            sceneReady = true   
+        }, 1500)
     },
 
     // Progress
@@ -116,17 +123,54 @@ debugObject.envMapIntensity = 5
 /**
  * Models
  */
+//  gltfLoader.load(
+//     '/models/DamagedHelmet/glTF/DamagedHelmet.gltf',
+//     (gltf) =>
+//     {
+//         gltf.scene.scale.set(1, 1, 1)
+//         gltf.scene.rotation.y = Math.PI * 0.5
+//         gltf.scene.position.set(0, 1, 0)
+//         scene.add(gltf.scene)
+//         console.log(gltf.scene)
+//         // const box = new THREE.BoxHelper( gltf.scene, 0xffff00 );
+//         // scene.add( box );
+
+//         updateAllMaterials()
+//     }
+// )
+// const axesHelper = new THREE.AxesHelper( 5 );
+// scene.add( axesHelper );
+
 gltfLoader.load(
-    '/models/DamagedHelmet/glTF/DamagedHelmet.gltf',
+    '/models/avocado/glTF/Avocado.gltf',
     (gltf) =>
     {
-        gltf.scene.scale.set(2.5, 2.5, 2.5)
+        gltf.scene.scale.set(50, 50, 50)
+        gltf.scene.position.set(0, 0, 0)
         gltf.scene.rotation.y = Math.PI * 0.5
+        console.log(gltf.scene.position)
         scene.add(gltf.scene)
 
         updateAllMaterials()
     }
 )
+
+// POINTS
+const raycaster = new Raycaster
+const points = [
+    {
+        position: new THREE.Vector3(0.5, 0.9, -0.6),
+        element: document.querySelector('.point-0')
+    },
+    {
+        position: new THREE.Vector3(0.7, 1.3, 0.2),
+        element: document.querySelector('.point-1')
+    },
+    {
+        position: new THREE.Vector3(-0.35, 1.9, 0.4),
+        element: document.querySelector('.point-2')
+    }
+]
 
 /**
  * Lights
@@ -193,10 +237,51 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 /**
  * Animate
  */
+ console.log(scene.children)
 const tick = () =>
 {
     // Update controls
     controls.update()
+
+    if(sceneReady) {
+        // Iterate Points
+        for(const point of points){
+            const screenPosition = point.position.clone()
+            // retruns screen position -1 -> 1
+            screenPosition.project(camera)
+            
+            const translateX = screenPosition.x * sizes.width * 0.5
+            const translateY = - screenPosition.y * sizes.height * 0.5
+            point.element.style.transform = `translate(${translateX}px, ${translateY}px)`
+    
+            raycaster.setFromCamera(screenPosition, camera)
+    
+            const intersects = raycaster.intersectObjects(scene.children, true)
+            
+            if(intersects.length === 0){
+                point.element.classList.add('visible')
+            } else {
+                console.log(intersects)
+                // distance from camera of first intersection
+                const intersectionDistance = intersects[0].distance
+                const pointDistance = point.position.distanceTo(camera.position)
+    
+                
+                for(const inter in intersects) {
+                    if(inter.object === scene.children[4]) {
+                        console.log('yes')
+                        if(pointDistance > intersectionDistance){
+                            point.element.classList.remove('visible')
+                        } else {
+                            point.element.classList.add('visible')
+                        }
+                    }
+                }
+            }
+    
+        }
+    }
+
 
     // Render
     renderer.render(scene, camera)
