@@ -1,16 +1,5 @@
-# Three.js Journey
+# 3D Hotspot Boilerplate
 
-## Setup
-Download [Node.js](https://nodejs.org/en/download/).
-Run this followed commands:
+Boilerplate for three.js hotspots attached to 3D model.
 
-``` bash
-# Install dependencies (only the first time)
-npm install
-
-# Run the local server at localhost:8080
-npm run dev
-
-# Build for production in the dist/ directory
-npm run build
-```
+🥑 [See it here](https://3d-avo.netlify.app) 🥑
